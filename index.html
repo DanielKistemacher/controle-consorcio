@@ -1,0 +1,347 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Controle de Cotas — Consórcio</title>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+      background: #f4f5f7;
+      color: #1a1a1a;
+      min-height: 100vh;
+      padding: 2rem 1rem;
+    }
+
+    h1 {
+      text-align: center;
+      font-size: 1.4rem;
+      font-weight: 600;
+      color: #1a1a1a;
+      margin-bottom: 1.5rem;
+      letter-spacing: -0.01em;
+    }
+
+    .form-card {
+      background: #fff;
+      border: 1px solid #e0e0e0;
+      border-radius: 12px;
+      padding: 1.25rem 1.5rem;
+      max-width: 860px;
+      margin: 0 auto 1.5rem;
+      display: flex;
+      gap: 1rem;
+      flex-wrap: wrap;
+      align-items: flex-end;
+    }
+
+    .field {
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+      flex: 1;
+      min-width: 160px;
+    }
+
+    label {
+      font-size: 12px;
+      font-weight: 500;
+      color: #555;
+      text-transform: uppercase;
+      letter-spacing: 0.04em;
+    }
+
+    input {
+      border: 1px solid #d0d0d0;
+      border-radius: 8px;
+      padding: 8px 10px;
+      font-size: 14px;
+      color: #1a1a1a;
+      background: #fafafa;
+      outline: none;
+      transition: border-color 0.15s;
+    }
+
+    input:focus {
+      border-color: #3b82f6;
+      background: #fff;
+    }
+
+    .btn-group {
+      display: flex;
+      gap: 8px;
+    }
+
+    button {
+      padding: 8px 18px;
+      border-radius: 8px;
+      font-size: 14px;
+      font-weight: 500;
+      cursor: pointer;
+      transition: background 0.15s, transform 0.1s;
+      border: none;
+    }
+
+    button:active { transform: scale(0.97); }
+
+    .btn-add {
+      background: #22c55e;
+      color: #fff;
+    }
+
+    .btn-add:hover { background: #16a34a; }
+
+    .btn-clear {
+      background: #f1f5f9;
+      color: #555;
+      border: 1px solid #d0d0d0;
+    }
+
+    .btn-clear:hover { background: #e2e8f0; }
+
+    .stats {
+      max-width: 860px;
+      margin: 0 auto 1rem;
+      display: flex;
+      gap: 10px;
+    }
+
+    .stat {
+      background: #fff;
+      border: 1px solid #e0e0e0;
+      border-radius: 10px;
+      padding: 10px 16px;
+      font-size: 13px;
+      color: #555;
+    }
+
+    .stat strong { color: #1a1a1a; font-size: 16px; }
+
+    .table-wrapper {
+      max-width: 860px;
+      margin: 0 auto;
+      background: #fff;
+      border: 1px solid #e0e0e0;
+      border-radius: 12px;
+      padding: 1rem;
+      overflow-x: auto;
+    }
+
+    table {
+      border-collapse: separate;
+      border-spacing: 4px;
+      width: 100%;
+    }
+
+    td {
+      width: 42px;
+      height: 38px;
+      text-align: center;
+      vertical-align: middle;
+      font-size: 12px;
+      font-weight: 500;
+      color: #444;
+      border-radius: 6px;
+      background: #f8f9fa;
+      border: 1px solid #e8e8e8;
+      cursor: default;
+      position: relative;
+      user-select: none;
+      transition: background 0.15s, border-color 0.15s, color 0.15s;
+    }
+
+    td.drawn {
+      background: #dcfce7;
+      border-color: #86efac;
+      color: #166534;
+      font-weight: 600;
+    }
+
+    td:hover {
+      border-color: #94a3b8;
+      background: #f1f5f9;
+      z-index: 10;
+    }
+
+    td.drawn:hover {
+      background: #bbf7d0;
+      border-color: #4ade80;
+    }
+
+    .tooltip {
+      display: none;
+      position: absolute;
+      bottom: calc(100% + 6px);
+      left: 50%;
+      transform: translateX(-50%);
+      background: #1e293b;
+      color: #f8fafc;
+      font-size: 11px;
+      font-weight: 400;
+      padding: 6px 10px;
+      border-radius: 7px;
+      white-space: nowrap;
+      pointer-events: none;
+      z-index: 100;
+      line-height: 1.5;
+    }
+
+    .tooltip::after {
+      content: '';
+      position: absolute;
+      top: 100%;
+      left: 50%;
+      transform: translateX(-50%);
+      border: 5px solid transparent;
+      border-top-color: #1e293b;
+    }
+
+    td:hover .tooltip { display: block; }
+
+    .msg {
+      font-size: 13px;
+      padding: 8px 12px;
+      border-radius: 8px;
+      margin-top: 8px;
+      display: none;
+    }
+
+    .msg.error { background: #fee2e2; color: #991b1b; display: block; }
+    .msg.success { background: #dcfce7; color: #166534; display: block; }
+
+    @media (max-width: 600px) {
+      td { width: 32px; height: 30px; font-size: 10px; }
+    }
+  </style>
+</head>
+<body>
+
+<h1>Controle de Cotas — Consórcio</h1>
+
+<div class="form-card">
+  <div class="field">
+    <label>Número da Cota</label>
+    <input type="number" id="inp-cota" placeholder="Ex: 42" min="1" max="650" />
+  </div>
+  <div class="field">
+    <label>Data da Assembleia</label>
+    <input type="date" id="inp-data" />
+  </div>
+  <div class="field">
+    <label>Nº da Assembleia</label>
+    <input type="number" id="inp-assembleia" placeholder="Ex: 12" min="1" />
+  </div>
+  <div class="btn-group">
+    <button class="btn-add" onclick="addDraw()">Registrar</button>
+    <button class="btn-clear" onclick="clearAll()">Limpar tudo</button>
+  </div>
+  <div id="msg" class="msg"></div>
+</div>
+
+<div class="stats">
+  <div class="stat">Sorteadas: <strong id="count-drawn">0</strong></div>
+  <div class="stat">Restantes: <strong id="count-left">650</strong></div>
+</div>
+
+<div class="table-wrapper">
+  <table id="grid"></table>
+</div>
+
+<script>
+  const TOTAL = 650;
+  const COLS = 26;
+  const STORAGE_KEY = 'consorcio_draws';
+
+  let draws = {};
+
+  function load() {
+    try {
+      const raw = localStorage.getItem(STORAGE_KEY);
+      if (raw) draws = JSON.parse(raw);
+    } catch(e) { draws = {}; }
+  }
+
+  function save() {
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(draws));
+  }
+
+  function fmt(dateStr) {
+    if (!dateStr) return '';
+    const [y, m, d] = dateStr.split('-');
+    return `${d}/${m}/${y}`;
+  }
+
+  function buildGrid() {
+    const table = document.getElementById('grid');
+    table.innerHTML = '';
+    let num = 1;
+    while (num <= TOTAL) {
+      const tr = document.createElement('tr');
+      for (let c = 0; c < COLS && num <= TOTAL; c++, num++) {
+        const td = document.createElement('td');
+        td.id = `c${num}`;
+        td.textContent = num;
+        const d = draws[num];
+        if (d) {
+          td.classList.add('drawn');
+          const tip = document.createElement('div');
+          tip.className = 'tooltip';
+          tip.innerHTML = `Assembleia nº ${d.assembleia}<br>${fmt(d.data)}`;
+          td.appendChild(tip);
+        }
+        tr.appendChild(td);
+      }
+      table.appendChild(tr);
+    }
+    updateStats();
+  }
+
+  function updateStats() {
+    const n = Object.keys(draws).length;
+    document.getElementById('count-drawn').textContent = n;
+    document.getElementById('count-left').textContent = TOTAL - n;
+  }
+
+  function showMsg(text, type) {
+    const el = document.getElementById('msg');
+    el.textContent = text;
+    el.className = `msg ${type}`;
+    setTimeout(() => { el.className = 'msg'; }, 3000);
+  }
+
+  function addDraw() {
+    const cota = parseInt(document.getElementById('inp-cota').value);
+    const data = document.getElementById('inp-data').value;
+    const assembleia = document.getElementById('inp-assembleia').value;
+
+    if (!cota || cota < 1 || cota > 650) return showMsg('Informe uma cota entre 1 e 650.', 'error');
+    if (!data) return showMsg('Informe a data da assembleia.', 'error');
+    if (!assembleia) return showMsg('Informe o número da assembleia.', 'error');
+
+    draws[cota] = { data, assembleia };
+    save();
+    buildGrid();
+    showMsg(`Cota ${cota} registrada com sucesso!`, 'success');
+
+    document.getElementById('inp-cota').value = '';
+    document.getElementById('inp-cota').focus();
+  }
+
+  function clearAll() {
+    if (!confirm('Deseja apagar todos os registros?')) return;
+    draws = {};
+    save();
+    buildGrid();
+  }
+
+  document.getElementById('inp-cota').addEventListener('keydown', e => {
+    if (e.key === 'Enter') addDraw();
+  });
+
+  load();
+  buildGrid();
+</script>
+</body>
+</html>
